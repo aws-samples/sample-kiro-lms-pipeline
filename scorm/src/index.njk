@@ -1,0 +1,179 @@
+---
+permalink: "index.html"
+eleventyExcludeFromCollections: true
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ course.title }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="assets/css/course.css">
+</head>
+{#
+  Single-page SCO architecture
+  ----------------------------
+  This is the ONE HTML file the LMS ever loads. It holds:
+
+    1. A home view (``#home-view``) showing the module cards.
+    2. A lesson view (``#lesson-view``) with the sidebar, main reading
+       column, and lesson-footer navigation.
+    3. Every lesson body pre-rendered as an inert ``<template>`` keyed
+       by slug. At runtime ``course.js`` clones the right template
+       into ``#lesson-content`` when the learner navigates.
+
+  Why one page instead of per-lesson files:
+  The previous multi-page layout re-initialized SCORM on every page
+  navigation, and Rustici rejected re-inits on an already-active
+  session. That caused every ``cmi.*`` write after the first page
+  to silently fail, which in turn made Rustici's rollup default to
+  "completed" on Save-and-Exit regardless of our explicit state.
+  A single-page SCO calls LMSInitialize exactly once per session, so
+  every subsequent ``set`` and ``save`` actually reaches the LMS.
+#}
+<body data-view="home">
+
+  <main id="home-view" class="course-home">
+    <h1>{{ course.title }}</h1>
+
+    {%- if course.short_description %}
+    <p class="course-description">{{ course.short_description }}</p>
+    {%- endif %}
+
+    <h2>Modules</h2>
+    <ol class="module-list">
+      {%- for module in modules %}
+        {%- set firstPage = null %}
+        {%- for page in collections.lessonPages %}
+          {%- if page.is_first_page_of_module and page.module_id == module.id %}
+            {%- set firstPage = page.slug %}
+          {%- endif %}
+        {%- endfor %}
+      <li class="module-card">
+        <div class="module-meta">
+          Module {{ loop.index }} · {{ module.target_duration_minutes or 15 }} min
+        </div>
+        <h3>{{ module.title }}</h3>
+        <p>{{ module.short_description }}</p>
+        {%- if firstPage %}
+        {#
+          Deep link into the lesson view. ``course.js`` intercepts the
+          click via delegated handling on ``[data-lesson-link]`` so the
+          transition happens client-side, without a page navigation.
+        #}
+        <a href="#{{ firstPage }}" data-lesson-link="{{ firstPage }}">Start this module →</a>
+        {%- else %}
+        <span class="module-meta"><em>Lesson not yet authored</em></span>
+        {%- endif %}
+      </li>
+      {%- endfor %}
+    </ol>
+  </main>
+
+  <div id="lesson-view" class="layout" hidden>
+    <aside class="sidebar" aria-label="Course navigation">
+      <nav class="sidebar-nav">
+        {%- for m in modules %}
+        <div class="sidebar-module"
+             data-module-id="{{ m.id }}"
+             data-collapsed="true">
+          <button class="sidebar-module-title" type="button"
+                  data-module-toggle="{{ m.id }}">
+            <span class="sidebar-module-name">{{ m.title }}</span>
+            <span class="sidebar-module-caret" aria-hidden="true">▾</span>
+          </button>
+          <ol class="sidebar-pages">
+            {%- for p in collections.lessonPages %}
+              {%- if p.module_id == m.id %}
+            <li class="sidebar-page"
+                data-page-slug="{{ p.slug }}">
+              <a href="#{{ p.slug }}"
+                 class="sidebar-page-link"
+                 data-lesson-link="{{ p.slug }}">
+                <span class="sidebar-page-bullet" aria-hidden="true"></span>
+                <span class="sidebar-page-title">{{ p.first_heading }}</span>
+              </a>
+            </li>
+              {%- endif %}
+            {%- endfor %}
+          </ol>
+        </div>
+        {%- endfor %}
+      </nav>
+    </aside>
+
+    <main class="lesson" role="main">
+      <article id="lesson-content" class="lesson-content"
+               aria-live="polite"
+               aria-busy="false">
+        {# Lesson body is injected here by course.js on navigation. #}
+      </article>
+
+      <nav class="lesson-footer" aria-label="Page navigation">
+        <a class="lesson-footer-btn lesson-footer-btn-prev"
+           href="#"
+           id="nav-prev"
+           hidden>← Previous</a>
+
+        <span class="lesson-footer-progress" id="nav-progress"></span>
+
+        <a class="lesson-footer-btn lesson-footer-btn-next"
+           href="#"
+           id="nav-next"
+           hidden>Next →</a>
+      </nav>
+
+      <p class="lesson-home-link">
+        <a href="#" data-lesson-link="__home__">← Back to course overview</a>
+      </p>
+    </main>
+  </div>
+
+  {#
+    Lesson body templates. One ``<template>`` per lesson, keyed by
+    ``data-lesson-slug``. ``<template>`` content is parsed by the
+    browser but not rendered or executed, so images don't load and
+    scripts don't fire until we clone the template into the live
+    lesson view. Keeps initial paint fast and scoped.
+  #}
+  {%- for page in collections.lessonPages %}
+  <template data-lesson-template="{{ page.slug }}"
+            data-module-id="{{ page.module_id }}"
+            data-overall-index="{{ page.overall_index }}"
+            data-prev-slug="{{ page.prev_slug or '' }}"
+            data-next-slug="{{ page.next_slug or '' }}"
+            {%- if page.is_course_end %} data-is-course-end="true"{%- endif %}>
+    {{ page.body | renderLessonBody(page.frontmatter, page.module_id) | safe }}
+  </template>
+  {%- endfor %}
+
+  {#
+    Metadata the runtime needs to size its progress counter and to
+    enumerate lesson order without re-reading every template.
+  #}
+  <script id="course-manifest" type="application/json">
+    {
+      "totalLessons": {{ collections.lessonPages.length }},
+      "minPageDwellSeconds": {{ scormConfig.min_page_dwell_seconds or 5 }},
+      "passingScore": {{ scormConfig.passing_score or 100 }},
+      "lessons": [
+        {%- for page in collections.lessonPages %}
+        {
+          "slug": "{{ page.slug }}",
+          "moduleId": "{{ page.module_id }}",
+          "overallIndex": {{ page.overall_index }},
+          "prevSlug": {% if page.prev_slug %}"{{ page.prev_slug }}"{% else %}null{% endif %},
+          "nextSlug": {% if page.next_slug %}"{{ page.next_slug }}"{% else %}null{% endif %},
+          "isCourseEnd": {% if page.is_course_end %}true{% else %}false{% endif %},
+          "isFirstPageOfModule": {% if page.is_first_page_of_module %}true{% else %}false{% endif %},
+          "firstHeading": {{ page.first_heading | dump | safe }}
+        }{% if not loop.last %},{% endif %}
+        {%- endfor %}
+      ]
+    }
+  </script>
+
+  <script src="assets/js/scorm_api_wrapper.js"></script>
+  <script src="assets/js/course.js"></script>
+</body>
+</html>

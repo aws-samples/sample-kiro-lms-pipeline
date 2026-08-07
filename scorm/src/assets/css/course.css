@@ -1,0 +1,666 @@
+/* ===========================================================================
+ * SCORM course stylesheet
+ *
+ * Design principles:
+ *  - No custom topbar: most LMS platforms render their own banner with
+ *    the course title and Save-and-Exit button above the SCO iframe.
+ *    A duplicate in-course topbar stacks on top of the platform's and
+ *    can intercept clicks on the platform's Save-and-Exit; that is why
+ *    the ``.topbar`` rules below are preserved only as legacy selectors
+ *    in case any authored content still references them. New code
+ *    should use ``.lesson-footer`` for in-course navigation.
+ *  - Fixed left sidebar showing module hierarchy + page tree with visit bullets
+ *  - Generous reading column in main content
+ *  - Static lesson-footer with prev / page counter / next. Completion
+ *    fires automatically on the last page once all pages are visited;
+ *    there is no Finish button. No fixed positioning, no z-index fight
+ *    with the platform's topbar.
+ *  - Inline callouts (emoji + italic line), not boxed asides
+ *  - System font stack, no web fonts
+ * =========================================================================*/
+
+:root {
+  /* Palette */
+  --c-bg: #ffffff;
+  --c-fg: #1a1a1a;
+  --c-fg-muted: #6a6a6a;
+  --c-fg-subtle: #8a8a8a;
+  --c-border: #e2e5e8;
+  --c-border-strong: #c9ced3;
+  --c-link: #0066cc;
+  --c-link-hover: #004a94;
+  --c-accent: #ff9900;
+
+  /* Topbar */
+  --c-topbar-bg: #141f2e;
+  --c-topbar-fg: #ffffff;
+  --c-topbar-btn-bg: transparent;
+  --c-topbar-btn-fg: #ffffff;
+  --c-topbar-btn-border: rgba(255, 255, 255, 0.25);
+  --c-topbar-btn-hover: rgba(255, 255, 255, 0.1);
+  --c-topbar-primary-bg: #ffffff;
+  --c-topbar-primary-fg: #141f2e;
+
+  /* Sidebar */
+  --c-sidebar-bg: #ffffff;
+  --c-sidebar-border: #e2e5e8;
+  --c-sidebar-fg: #1a1a1a;
+  --c-sidebar-fg-muted: #6a6a6a;
+  --c-sidebar-active-bg: #f0f6fc;
+  --c-sidebar-visited: #0066cc;
+  --c-sidebar-bullet: #b9c0c8;
+
+  /* Content */
+  --c-code-bg: #f5f5f5;
+
+  /* Spacing */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.25rem;
+  --sp-6: 1.5rem;
+  --sp-8: 2rem;
+  --sp-10: 2.5rem;
+
+  /* Layout */
+  --topbar-h: 0px;           /* platform owns the topbar; ours is removed */
+  --sidebar-w: 280px;
+  --max-content: 72ch;
+  --radius-sm: 4px;
+  --radius: 8px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--c-bg);
+  color: var(--c-fg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+               "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+a { color: var(--c-link); }
+a:hover { color: var(--c-link-hover); }
+
+/* View switching --------------------------------------------------------- *
+ * Single-page SCO: ``index.html`` contains both ``#home-view`` and
+ * ``#lesson-view``. ``course.js`` flips ``body[data-view]`` between
+ * ``"home"`` and ``"lesson"`` on navigation, and we use the [hidden]
+ * attribute on the view containers. The rules below are a defensive
+ * belt-and-braces in case a style somewhere overrides [hidden].
+ */
+body[data-view="home"] #lesson-view,
+body[data-view="lesson"] #home-view {
+  display: none !important;
+}
+[hidden] { display: none !important; }
+
+/* Topbar ------------------------------------------------------------------ */
+
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--topbar-h);
+  background: var(--c-topbar-bg);
+  color: var(--c-topbar-fg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--sp-4);
+  z-index: 100;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.topbar-left, .topbar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.topbar-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+}
+
+.topbar-btn {
+  background: var(--c-topbar-btn-bg);
+  color: var(--c-topbar-btn-fg);
+  border: 1px solid var(--c-topbar-btn-border);
+  border-radius: var(--radius-sm);
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.topbar-btn:hover:not([disabled]) { background: var(--c-topbar-btn-hover); }
+.topbar-btn[disabled] { opacity: 0.35; cursor: not-allowed; }
+
+.topbar-btn-primary {
+  background: var(--c-topbar-primary-bg);
+  color: var(--c-topbar-primary-fg);
+  font-weight: 600;
+}
+.topbar-btn-primary:hover { background: #f0f0f0; }
+
+.topbar-progress {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Layout ------------------------------------------------------------------ */
+
+.layout {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr;
+  margin-top: var(--topbar-h);
+  min-height: calc(100vh - var(--topbar-h));
+}
+
+/* Sidebar ----------------------------------------------------------------- */
+
+.sidebar {
+  background: var(--c-sidebar-bg);
+  border-right: 1px solid var(--c-sidebar-border);
+  /* Extra top padding keeps the first module title from sitting flush
+     against the platform's fixed banner at the top of the iframe. */
+  padding: var(--sp-8) var(--sp-3) var(--sp-6);
+  position: sticky;
+  top: var(--topbar-h);
+  height: calc(100vh - var(--topbar-h));
+  overflow-y: auto;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.sidebar-module { }
+
+.sidebar-module-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: var(--sp-2) var(--sp-3);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--c-sidebar-fg);
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  line-height: 1.3;
+}
+.sidebar-module-title:hover { background: #f5f5f5; }
+
+.sidebar-module-name { flex: 1; }
+
+.sidebar-module-caret {
+  font-size: 0.75rem;
+  color: var(--c-sidebar-fg-muted);
+  transition: transform 0.15s ease;
+  margin-left: var(--sp-2);
+}
+.sidebar-module[data-collapsed="true"] .sidebar-module-caret {
+  transform: rotate(-90deg);
+}
+.sidebar-module[data-collapsed="true"] .sidebar-pages {
+  display: none;
+}
+
+.sidebar-pages {
+  list-style: none;
+  padding: 0;
+  margin: var(--sp-1) 0 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-page { }
+
+.sidebar-page-link {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3) var(--sp-2) calc(var(--sp-3) + 0.5rem);
+  border-left: 2px solid transparent;
+  text-decoration: none;
+  color: var(--c-sidebar-fg-muted);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  border-radius: 0;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.sidebar-page-link:hover {
+  background: #f7f9fc;
+  color: var(--c-sidebar-fg);
+}
+
+.sidebar-page-bullet {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid var(--c-sidebar-bullet);
+  background: transparent;
+  flex-shrink: 0;
+  margin-top: 2px;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.sidebar-page[data-visited="true"] .sidebar-page-bullet {
+  background: var(--c-sidebar-visited);
+  border-color: var(--c-sidebar-visited);
+}
+
+.sidebar-page.is-active .sidebar-page-link {
+  color: var(--c-sidebar-fg);
+  font-weight: 600;
+  background: var(--c-sidebar-active-bg);
+  border-left-color: var(--c-sidebar-visited);
+}
+.sidebar-page.is-active .sidebar-page-bullet {
+  border-color: var(--c-sidebar-visited);
+  border-width: 2.5px;
+}
+
+.sidebar-page-title {
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+
+/* Main content ------------------------------------------------------------ */
+
+.lesson {
+  /* Top padding keeps the first heading clear of the platform's fixed
+     banner at the top of the iframe. */
+  padding: var(--sp-10) var(--sp-10) var(--sp-8);
+  overflow-x: hidden;
+}
+
+.lesson-content {
+  max-width: var(--max-content);
+  margin: 0;
+}
+
+h1 { font-size: 2rem; margin: 0 0 var(--sp-6); line-height: 1.2; font-weight: 700; }
+h2 { font-size: 1.45rem; margin: var(--sp-8) 0 var(--sp-4); line-height: 1.3; font-weight: 700; }
+h3 { font-size: 1.15rem; margin: var(--sp-6) 0 var(--sp-3); line-height: 1.4; font-weight: 600; }
+
+p { margin: var(--sp-3) 0; }
+
+ul, ol { padding-left: 1.5rem; }
+li { margin: var(--sp-2) 0; }
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: var(--sp-4) 0;
+  font-size: 0.95rem;
+  background: #ffffff;
+}
+th, td {
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: 1px solid var(--c-border);
+  text-align: left;
+  vertical-align: top;
+  line-height: 1.4;
+}
+th {
+  background: #fafbfc;
+  font-weight: 600;
+  border-bottom: 2px solid var(--c-border-strong);
+}
+tr:last-child td { border-bottom: none; }
+
+code {
+  background: var(--c-code-bg);
+  padding: 0.1rem 0.35rem;
+  border-radius: var(--radius-sm);
+  font-family: "SF Mono", Consolas, Monaco, monospace;
+  font-size: 0.9em;
+}
+pre {
+  background: var(--c-code-bg);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--radius);
+  overflow-x: auto;
+  font-size: 0.9rem;
+}
+pre code { padding: 0; background: transparent; }
+
+blockquote {
+  border-left: 3px solid var(--c-border-strong);
+  padding-left: var(--sp-4);
+  margin-left: 0;
+  color: var(--c-fg-muted);
+  font-style: italic;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--c-border);
+  margin: var(--sp-5) 0;
+  display: block;
+}
+
+/* Callouts — inline style ------------------------------------------------ */
+
+.callout {
+  margin: var(--sp-4) 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  display: block;
+}
+.callout-label {
+  display: inline;
+  font-weight: 700;
+  margin: 0;
+  font-size: inherit;
+}
+.callout-body {
+  display: inline;
+  font-style: italic;
+  color: var(--c-fg);
+}
+.callout-body > p {
+  display: inline;
+  margin: 0;
+}
+.callout-attribution {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--c-fg-muted);
+  margin: var(--sp-1) 0 0;
+  font-style: normal;
+}
+
+.callout-tip .callout-label { color: #b27400; }
+.callout-info .callout-label { color: #0066cc; }
+.callout-warning .callout-label { color: #bb2929; }
+
+/* Objectives block -------------------------------------------------------- */
+
+.objectives {
+  background: #f7f9fc;
+  padding: var(--sp-4) var(--sp-6);
+  border-radius: var(--radius);
+  margin: var(--sp-6) 0;
+  border-left: 3px solid var(--c-link);
+}
+.objectives h3 {
+  margin-top: 0;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--c-fg-muted);
+  font-weight: 600;
+}
+.objectives ul { margin-bottom: 0; }
+.objectives li { margin: var(--sp-1) 0; }
+
+/* Knowledge check --------------------------------------------------------- */
+
+.knowledge-check {
+  background: #f7f9fc;
+  padding: var(--sp-5) var(--sp-6);
+  border-radius: var(--radius);
+  border: 1px solid var(--c-border);
+  margin: var(--sp-6) 0;
+}
+.kc-question {
+  font-weight: 600;
+  margin-top: 0;
+  margin-bottom: var(--sp-4);
+  font-size: 1rem;
+}
+.kc-options {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+.kc-option {
+  width: 100%;
+  text-align: left;
+  background: #ffffff;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-3) var(--sp-4);
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-family: inherit;
+  display: flex;
+  gap: var(--sp-2);
+  transition: background 0.12s ease, border-color 0.12s ease;
+  line-height: 1.5;
+}
+.kc-option:hover:not([disabled]) {
+  background: #f0f6fc;
+  border-color: var(--c-link);
+}
+.kc-option[disabled] { cursor: default; }
+.kc-option[data-selected="true"][data-correct="true"] {
+  background: #e8f5e9;
+  border-color: #2e7d32;
+}
+.kc-option[data-selected="true"][data-correct="false"] {
+  background: #ffebee;
+  border-color: #c62828;
+}
+.kc-option-letter { font-weight: 600; min-width: 1.5em; color: var(--c-fg-muted); }
+.kc-feedback {
+  margin: var(--sp-4) 0 0;
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.kc-feedback.correct {
+  background: #e8f5e9;
+  color: #1b5e20;
+  border-left: 3px solid #2e7d32;
+}
+.kc-feedback.incorrect {
+  background: #ffebee;
+  color: #b71c1c;
+  border-left: 3px solid #c62828;
+}
+
+/* Course-complete banner --------------------------------------------------- *
+ * Appended by course.js (maybeAutoComplete) once the last page is reached
+ * with every page visited.
+ */
+
+.course-complete-banner p {
+  margin-top: 1.5em;
+  padding: 1em;
+  background: #232f3e;
+  border-left: 4px solid var(--c-accent);
+  color: #fff;
+  border-radius: 4px;
+}
+
+/* Module-end marker ------------------------------------------------------- */
+
+.module-end {
+  text-align: center;
+  margin: var(--sp-10) 0 var(--sp-4);
+  padding: var(--sp-4);
+  border-top: 1px dashed var(--c-border-strong);
+  color: var(--c-fg-subtle);
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Lesson footer ----------------------------------------------------------- *
+ * Static navigation bar at the bottom of every lesson page. Replaces the
+ * fixed top-pinned topbar that previously competed with the platform's own
+ * chrome for z-index and Save-and-Exit. The footer is flow-positioned so
+ * it scrolls with the content and cannot overlay the platform banner.
+ */
+
+.lesson-footer {
+  max-width: var(--max-content);
+  margin: var(--sp-10) 0 var(--sp-4);
+  padding: var(--sp-4) 0;
+  border-top: 1px solid var(--c-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+}
+
+.lesson-footer-btn {
+  display: inline-block;
+  padding: var(--sp-2) var(--sp-4);
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: var(--c-link);
+  background: transparent;
+  border: 1px solid var(--c-border-strong);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  cursor: pointer;
+  line-height: 1.3;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.lesson-footer-btn:hover:not(.is-disabled) {
+  background: #f0f6fc;
+  border-color: var(--c-link);
+}
+.lesson-footer-btn.is-disabled {
+  color: var(--c-fg-subtle);
+  border-color: var(--c-border);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.lesson-footer-progress {
+  font-size: 0.85rem;
+  color: var(--c-fg-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Course home page -------------------------------------------------------- */
+
+.course-home {
+  max-width: 56rem;
+  margin: 0 auto;
+  /* Top padding keeps the H1 clear of the platform's fixed banner above
+     the iframe. The platform banner is roughly 48 px tall; a little
+     extra space reads as intentional rather than clipped. */
+  padding: var(--sp-8) var(--sp-6);
+  padding-top: var(--sp-10);
+}
+.course-home h1 {
+  font-size: 2.25rem;
+  margin-bottom: var(--sp-4);
+}
+.course-home .course-description {
+  font-size: 1.1rem;
+  color: var(--c-fg-muted);
+  line-height: 1.6;
+  margin-bottom: var(--sp-8);
+}
+
+.module-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-4);
+}
+.module-card {
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  padding: var(--sp-5) var(--sp-6);
+  background: #ffffff;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+.module-card:hover {
+  border-color: var(--c-link);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+.module-card h3 {
+  margin-top: 0;
+  margin-bottom: var(--sp-2);
+  font-size: 1.15rem;
+}
+.module-card .module-meta {
+  font-size: 0.8rem;
+  color: var(--c-fg-muted);
+  margin-bottom: var(--sp-2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.module-card p { margin: var(--sp-2) 0; color: var(--c-fg); }
+.module-card a {
+  display: inline-block;
+  margin-top: var(--sp-2);
+  font-weight: 600;
+}
+
+/* Responsive -------------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  :root {
+    --sidebar-w: 240px;
+  }
+  .lesson { padding: var(--sp-6); }
+}
+
+@media (max-width: 700px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    display: none; /* MVP: hide sidebar on mobile; hamburger later */
+  }
+  .lesson { padding: var(--sp-5); }
+  .topbar-progress { display: none; }
+  .topbar-title { font-size: 0.8rem; }
+}
+
+/* Lesson footer — back-to-overview link -------------------------------- *
+ * Small secondary link under the prev/next footer. Lets the learner
+ * jump back to the module-card home view without hunting for the
+ * platform's banner or a browser back button. Present in every
+ * lesson view.
+ */
+.lesson-home-link {
+  max-width: var(--max-content);
+  margin: var(--sp-2) 0 var(--sp-6);
+  padding: 0;
+  font-size: 0.85rem;
+  color: var(--c-fg-muted);
+}
+.lesson-home-link a {
+  text-decoration: none;
+  color: var(--c-fg-muted);
+}
+.lesson-home-link a:hover {
+  color: var(--c-link);
+  text-decoration: underline;
+}
+

@@ -1,0 +1,64 @@
+---
+permalink: "imsmanifest.xml"
+eleventyExcludeFromCollections: true
+---
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest identifier="{{ course.short_name }}-manifest"
+          version="1.0"
+          xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2"
+          xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://www.imsproject.org/xsd/imscp_rootv1p1p2 imscp_rootv1p1p2.xsd
+                              http://www.imsglobal.org/xsd/imsmd_rootv1p2p1 imsmd_rootv1p2p1.xsd
+                              http://www.adlnet.org/xsd/adlcp_rootv1p2 adlcp_rootv1p2.xsd">
+  <metadata>
+    <schema>ADL SCORM</schema>
+    <schemaversion>1.2</schemaversion>
+  </metadata>
+  <organizations default="org-{{ course.short_name }}">
+    <organization identifier="org-{{ course.short_name }}">
+      <title>{{ course.title }}</title>
+      <item identifier="item-{{ course.short_name }}"
+            identifierref="res-{{ course.short_name }}">
+        <title>{{ course.title }}</title>
+        {#
+          Mastery score tells the LMS the completion criterion. Without
+          it, many LMSs treat any exit from
+          the SCO as completion, which makes Save-and-Exit from a
+          mid-course page flip the course to "complete" on return. With
+          a mastery score of 100, the LMS requires cmi.core.score.raw
+          >= 100 before marking complete — automatic completion sets that
+          score once every page is visited; mid-course exits never do.
+          Explicit is better than relying on LMS defaults here.
+
+          The value comes from ``scorm.passing_score`` in course.yaml;
+          the runtime reads the same value (via the course-manifest JSON
+          in index.html) when it writes cmi.core.score.raw on completion,
+          so the two can never drift apart.
+        #}
+        <adlcp:masteryscore>{{ scormConfig.passing_score or 100 }}</adlcp:masteryscore>
+      </item>
+    </organization>
+  </organizations>
+  <resources>
+    {#
+      Single-page SCO: one index.html holds every lesson body inlined as
+      <template> elements. Navigation between lessons is JS-driven
+      (show/hide of the active lesson), so LMSInitialize is called once
+      per session and cmi.* writes persist across lesson transitions.
+      Previously this listed per-lesson HTML files; see the commit
+      history for the old multi-page layout and why it was replaced.
+    #}
+    <resource identifier="res-{{ course.short_name }}"
+              type="webcontent"
+              adlcp:scormtype="sco"
+              href="index.html">
+      <file href="index.html"/>
+      <file href="assets/css/course.css"/>
+      <file href="assets/js/scorm_api_wrapper.js"/>
+      <file href="assets/js/course.js"/>
+      {% for img in imageFiles %}<file href="{{ img }}"/>
+      {% endfor %}
+    </resource>
+  </resources>
+</manifest>

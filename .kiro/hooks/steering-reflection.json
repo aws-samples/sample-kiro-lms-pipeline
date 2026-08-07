@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Steering Reflection: Reflect After Each Turn",
+      "description": "After each agent response, quickly reflect on whether anything we just did should update the deep authoring steering files in .kiro/steering/ (course-planning, source-intake, lesson-authoring, scorm-authoring, assessment-authoring). Propose changes — do not auto-commit. Explicitly separate course-specific tactics from transferable patterns. Note: the Stop trigger may not fire in every Kiro version (and never fires in kiro-cli); if it stays silent, ask the agent directly to reflect on whether the session surfaced a transferable lesson for the steering.",
+      "trigger": "Stop",
+      "action": {
+        "type": "agent",
+        "prompt": "You just finished a turn of work on a course in this workspace. The deep authoring steering files in `.kiro/steering/` (course-planning.md, source-intake.md, lesson-authoring.md, scorm-authoring.md, assessment-authoring.md) capture transferable knowledge for producing SCORM courses for LMS delivery.\n\nDo a brief reflection on whether any steering file needs updating based on what just happened. Apply this rule strictly:\n\n**Transferable pattern (update the steering)** — applies to future courses in any domain:\n- Gotchas discovered (tool behavior, LMS platform limits, file-format quirks)\n- New CLI or build techniques (Eleventy tricks, zip packaging, SCORM API behavior)\n- Structural patterns (e.g., \"two source decks per module: polished + raw tool output\")\n- Workflow improvements (e.g., \"lint lessons before every build\")\n- Corrections to incorrect guidance already in the steering\n\n**Course-specific (do NOT update the steering)** — only applies to the current course:\n- Subject-matter domain knowledge or scoring rules\n- This course's structure or module count\n- Specific file paths under `build/module-N/`\n- Copy or wording specific to this course's positioning\n\n**Your output format:**\n\nIf nothing transferable emerged, say \"No steering updates this turn\" in one line and stop.\n\nIf something did, output a short structured proposal:\n\n```\n## Proposed steering update\n\n**Target file:** `.kiro/steering/<file>.md`\n**Section:** <section name or \"new section: ...\">\n**Why:** <1 sentence — what the transferable lesson is>\n**Proposed change:** <1-3 bullet summary of the addition>\n**Course-specific context stripped:** <what from the original lesson was course-specific and was removed>\n```\n\nDo **not** edit the steering files. Only propose. I (the user) will say \"apply it\" or \"skip\" in the next turn.\n\nKeep the reflection to under 10 lines unless the proposal is genuinely substantial. If you're unsure whether something is transferable, lean toward \"not transferable\" — we'd rather under-update than pollute the steering with course-specific detail."
+      },
+      "enabled": true
+    }
+  ]
+}

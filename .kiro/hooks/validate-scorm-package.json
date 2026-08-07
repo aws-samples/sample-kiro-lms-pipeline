@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Validate SCORM Package on Creation",
+      "description": "When a SCORM zip appears under courses/*/scorm/dist/, immediately run the package validator against it so a broken package is caught the moment it is built, before anyone considers uploading it. Note: PostFileCreate may not fire for zips written by the build script in every Kiro version; if this hook stays silent after a build, run the validator yourself (python3 scripts/validate-scorm.py <path-to-zip>) or ask Kiro to build the course again - the always-on steering carries the full lint -> build -> validate sequence.",
+      "trigger": "PostFileCreate",
+      "matcher": "courses/[^/]*/scorm/dist/[^/]*\\.zip$",
+      "action": {
+        "type": "agent",
+        "prompt": "A SCORM package zip was just created. Validate it from the repository root:\n\n    python3 scripts/validate-scorm.py <path-to-the-new-zip>\n\nIf validation passes, reply with one line naming the zip and confirming it is ready for LMS upload.\n\nIf validation fails, list every reported error and diagnose the likely cause using the troubleshooting guidance in .kiro/steering/scorm-authoring.md (#scorm-authoring). Then fix the build inputs, rebuild with scripts/build-scorm.sh <course-name>, and re-validate. Do not suggest uploading a package that fails validation."
+      },
+      "enabled": true
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+course:
+  title: "Build a SCORM Course from Markdown"
+  short_name: "sample-course"
+  short_description: "A three-module example course that demonstrates the markdown-to-SCORM authoring pipeline."
+  default_language: en-US
+  tags:
+    - scorm
+    - course-authoring
+    - e-learning
+
+modules:
+  - id: module-1
+    title: "The Authoring Pipeline"
+    short_description: "How markdown lessons become a single-page SCORM package."
+  - id: module-2
+    title: "Quiz Interactions"
+    short_description: "Ungraded and graded knowledge checks, feedback, and page gating."
+  - id: module-3
+    title: "Media and Completion Rules"
+    short_description: "Embedding images, dwell-time gating, and automatic completion."
+  - id: module-4
+    title: "Reference Materials"
+    short_description: "Downloadable templates and further reading."
+    resources_only: true
+
+scorm:
+  version: "1.2"
+  passing_score: 100
+
+assessment:
+  name: "SCORM Authoring Fundamentals Check"
+  description: "Validates understanding of the markdown-to-SCORM authoring pipeline."
+  passing_score: 80
+  time_limit_minutes: 30

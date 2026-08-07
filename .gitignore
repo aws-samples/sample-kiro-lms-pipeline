@@ -1,0 +1,36 @@
+# Build outputs (covers both the shared engine and per-course subtrees)
+**/scorm/build/
+**/scorm/dist/
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# IDE / editor
+.vscode/
+.idea/
+*.code-workspace
+
+# macOS
+.DS_Store
+
+# Secrets / env
+.env
+.env.*
+
+# Pytest
+.pytest_cache/
+
+# Security scan outputs
+.ash/
+
+# Scratch / temp
+/tmp/
+*.log
+.cache/

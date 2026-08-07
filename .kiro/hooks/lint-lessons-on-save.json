@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Lint Lessons on Save",
+      "description": "When a lesson.md or course.yaml is saved, run the lesson linter for its course and report any structural errors (frontmatter, page boundaries, knowledge checks, image paths, heading depth, moduleEnd) so they get fixed before the SCORM build.",
+      "trigger": "PostFileSave",
+      "matcher": "(courses/[^/]*/build/[^/]*/lesson\\.md$|courses/[^/]*/course\\.yaml$)",
+      "action": {
+        "type": "agent",
+        "prompt": "A course source file was just saved. Determine which course it belongs to from its path (courses/<course-name>/...), then run the lesson linter from the repository root:\n\n    python3 scripts/lint-lessons.py <course-name>\n\nIf the linter exits 0 with no warnings, reply with one line confirming the lessons are lint-clean and stop.\n\nIf every reported error is \"lesson.md not found\" for a module, that's expected right after course.yaml is first written and before that module's lesson.md is authored - note it in one line and continue authoring rather than treating it as a blocker or asking about it.\n\nFor any other errors or warnings, summarize them grouped by module, then fix the ones that are mechanical (broken image paths, missing frontmatter fields, heading depth) directly in the affected lesson.md. For anything requiring an authoring judgment call (empty pages, knowledge check with no correct answer, misplaced moduleEnd), describe the problem and ask before changing content. Re-run the linter after fixes to confirm it passes."
+      },
+      "enabled": true
+    }
+  ]
+}

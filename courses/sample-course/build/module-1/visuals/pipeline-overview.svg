@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 160" role="img" aria-label="Authoring pipeline: lesson markdown to Eleventy build to SCORM zip to LMS">
+  <style>
+    .box { fill: #f5f7fa; stroke: #43506c; stroke-width: 2; rx: 8; }
+    .label { font: 600 16px system-ui, sans-serif; fill: #1f2937; }
+    .sub { font: 13px system-ui, sans-serif; fill: #4b5563; }
+    .arrow { stroke: #43506c; stroke-width: 2; marker-end: url(#head); }
+  </style>
+  <defs>
+    <marker id="head" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 z" fill="#43506c"/>
+    </marker>
+  </defs>
+  <rect class="box" x="10" y="45" width="150" height="70" rx="8"/>
+  <text class="label" x="85" y="75" text-anchor="middle">lesson.md</text>
+  <text class="sub" x="85" y="97" text-anchor="middle">per module</text>
+  <line class="arrow" x1="160" y1="80" x2="195" y2="80"/>
+  <rect class="box" x="200" y="45" width="150" height="70" rx="8"/>
+  <text class="label" x="275" y="75" text-anchor="middle">Eleventy</text>
+  <text class="sub" x="275" y="97" text-anchor="middle">one index.html</text>
+  <line class="arrow" x1="350" y1="80" x2="385" y2="80"/>
+  <rect class="box" x="390" y="45" width="150" height="70" rx="8"/>
+  <text class="label" x="465" y="75" text-anchor="middle">SCORM zip</text>
+  <text class="sub" x="465" y="97" text-anchor="middle">manifest + assets</text>
+  <line class="arrow" x1="540" y1="80" x2="575" y2="80"/>
+  <rect class="box" x="580" y="45" width="130" height="70" rx="8"/>
+  <text class="label" x="645" y="75" text-anchor="middle">LMS</text>
+  <text class="sub" x="645" y="97" text-anchor="middle">one training</text>
+</svg>

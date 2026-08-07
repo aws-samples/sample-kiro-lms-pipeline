@@ -1,0 +1,70 @@
+# Example authored assessment.yaml (see the power's assessment-authoring.md
+# steering file). Exercised by the parse_assessment_yaml tests.
+name: "SCORM Authoring Fundamentals Check"
+description: "Validates understanding of the markdown-to-SCORM authoring pipeline."
+passing_score: 80
+time_limit_minutes: 30
+language: "English (US)"
+
+sections:
+  - title: "The Authoring Pipeline"
+    description: "How markdown lessons become a SCORM package."
+  - title: "Quiz Interactions"
+    description: "Knowledge checks, feedback, and gating."
+  - title: "Media and Completion Rules"
+    description: "Images, dwell time, and completion."
+
+questions:
+  - question_text: "Which file is the source of truth for a module's lesson content?"
+    response_type: "Single select"
+    section: "The Authoring Pipeline"
+    options:
+      - text: "lesson.md"
+        correct: true
+        explanation: "Each module's lesson.md is the authored source the build renders."
+      - text: "index.html"
+        correct: false
+      - text: "imsmanifest.xml"
+        correct: false
+    correct_answer_explanation: "lesson.md is the authored source; everything else is generated."
+    score: 1
+
+  - question_text: "Which of the following are produced by the build pipeline?"
+    response_type: "Multi select"
+    section: "The Authoring Pipeline"
+    options:
+      - text: "index.html"
+        correct: true
+      - text: "imsmanifest.xml"
+        correct: true
+      - text: "The source lesson.md"
+        correct: false
+      - text: "A SCORM zip package"
+        correct: true
+    score: 2
+
+  - question_text: "A graded knowledge check can gate progression to the next page."
+    response_type: "True/False"
+    section: "Quiz Interactions"
+    options:
+      - text: "TRUE"
+        correct: true
+      - text: "FALSE"
+        correct: false
+    score: 1
+
+  - question_text: "Does the runtime report the score to the LMS on completion?"
+    response_type: "Yes/No"
+    section: "Media and Completion Rules"
+    options:
+      - text: "YES"
+        correct: true
+      - text: "NO"
+        correct: false
+    score: 1
+
+  - question_text: "How many seconds of dwell time unlock the Next button by default?"
+    response_type: "Number"
+    correct_answer: "20"
+    options: []
+    score: 1

@@ -1,0 +1,20 @@
+{
+  "name": "sample-kiro-scorm-pipeline",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Eleventy builder that renders an authored course into a single-page SCORM 1.2 package.",
+  "scripts": {
+    "build": "eleventy --output=../build",
+    "serve": "eleventy --output=../build --serve --port=8080"
+  },
+  "engines": {
+    "node": ">=18.0.0 <24.0.0"
+  },
+  "devDependencies": {
+    "@11ty/eleventy": "3.1.6",
+    "js-yaml": "4.3.1"
+  },
+  "dependencies": {
+    "markdown-it": "14.3.0"
+  }
+}

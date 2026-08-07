@@ -1,0 +1,13 @@
+{
+  "name": "scorm-pipeline-runtime-tests",
+  "private": true,
+  "description": "Runtime tier: load the built single-page SCO in jsdom against a scorm-again SCORM 1.2 API stub and assert the LMS-visible behavior.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "jsdom": "25.0.1",
+    "scorm-again": "2.6.8"
+  }
+}

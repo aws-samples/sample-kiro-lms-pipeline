@@ -1,0 +1,5 @@
+# Core pipeline: lint, build, and test the SCORM courses.
+# Install with: pip install -r requirements.txt
+pyyaml==6.0.3
+pytest==9.1.1
+defusedxml==0.7.1

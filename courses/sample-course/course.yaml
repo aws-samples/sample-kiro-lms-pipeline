@@ -1,0 +1,31 @@
+course:
+  title: "Build a SCORM Course from Markdown"
+  short_name: "sample-course"
+  short_description: "A three-module example course that demonstrates the markdown-to-SCORM authoring pipeline in this repository."
+  default_language: en-US
+  tags:
+    - scorm
+    - course-authoring
+    - e-learning
+  total_duration_minutes: 30
+
+modules:
+  - id: module-1
+    title: "The Authoring Pipeline"
+    short_description: "How markdown lessons become a single-page SCORM package."
+    target_duration_minutes: 10
+  - id: module-2
+    title: "Quiz Interactions"
+    short_description: "Ungraded and graded knowledge checks, feedback, and page gating."
+    target_duration_minutes: 10
+  - id: module-3
+    title: "Media and Completion Rules"
+    short_description: "Embedding images, dwell-time gating, and automatic completion."
+    target_duration_minutes: 10
+
+scorm:
+  version: "1.2"
+  output: scorm/dist/sample-course.zip
+  completion_strategy: explicit_finish   # documentary only; not read by the pipeline. Completion is automatic: last page reached with every page's gating (dwell + all pages visited) satisfied.
+  passing_score: 100                     # drives <adlcp:masteryscore> in the manifest and the score the runtime writes on completion
+  min_page_dwell_seconds: 5              # Next button unlocks after this many seconds per page
