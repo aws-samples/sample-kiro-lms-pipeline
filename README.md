@@ -5,7 +5,7 @@
 Convert raw training material (decks, Word docs, PDFs, playbooks, markdown docs) into LMS-ready SCORM 1.2 packages using a two-layer [Kiro](https://kiro.dev) architecture.
 
 The repo is designed to be driven from a Kiro conversation: drop your material into `courses/<name>/`, ask Kiro to build the course, and Kiro runs the pipeline itself and hands back the upload-ready zip.
-There is nothing to install first; opening the repo in Kiro loads everything it needs.
+Opening the repo in Kiro loads the steering it needs, and Kiro installs the project's dependencies and runs the pipeline for you. You do need Node.js, Python, and `zip` available first (see Prerequisites).
 Deterministic scripts remain the engine underneath: linting lesson structure, building the package, and validating the output.
 Kiro steering encodes the domain knowledge that scripts cannot, such as why the package must be a single-page SCO to track completion reliably on Rustici-backed LMS tenants.
 
@@ -64,7 +64,7 @@ The optional intake and assessment tools each declare their own dependency and f
 The primary way to use this repo is a Kiro conversation; you never need to copy script commands.
 
 1. Open the repo in Kiro.
-   The workspace steering in `.kiro/steering/` loads automatically, so Kiro already knows the pipeline. There is nothing to install.
+   The workspace steering in `.kiro/steering/` loads automatically, so Kiro already knows the pipeline.
 2. Say: *"Build the sample course."*
    Kiro runs lint, build, and validate itself and replies with the path of the upload-ready zip (`courses/sample-course/scorm/dist/sample-course.zip`).
 3. For your own course, drop your source material into `courses/<name>/` and say: *"Plan and build a course from this."*
