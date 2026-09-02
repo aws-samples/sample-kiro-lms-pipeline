@@ -7,7 +7,7 @@
 # extract_visuals.py for .pptx input; see README Prerequisites.
 
 pypdfium2==5.12.0  # extract_visuals.py: PDF -> per-slide PNGs
-pypdf==6.15.0      # source-intake PDF path: PDF -> text
+pypdf==6.16.1      # source-intake PDF path: PDF -> text
 python-pptx==1.0.2 # extract_notes.py: deck speaker notes
 openpyxl==3.1.5    # build_assessment.py: assessment XLSX export
 boto3==1.42.54     # caption_visuals.py only (Bedrock vision captions)
